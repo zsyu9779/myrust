@@ -300,6 +300,21 @@ fn main() {
     let s3 = takes_and_gives_back(s2); // s2 被移动到 takes_and_gives_back 中,它也将返回值移动给 s3
     println!("s1 = {}, s3 = {}",s1,s3); //这里如果尝试打印s2会报错，因为s2已经失效了
 
+    //=====引用和借用=======
+
+    // 引用和解引用
+    let x = 5;
+    let y = &x;
+    println!("x = {}, y = {}",x,*y); //解引用
+    //引用和解引用是一对互逆操作，引用是指向某个值的指针，解引用是获取指针指向的值
+    //不可变引用
+    let s1 = String::from("hello");
+    let len = calculate_length(&s1); //传递s1的引用 但是calculate_length函数并不拥有s1的所有权
+    println!("The length of '{}' is {}.", s1, len); //所以这里打印s1是没有问题的
+    //可变引用 尝试修改引用变量
+    let mut s2 = String :: from("hello");
+    change(&mut s2); //传递s2的可变引用
+
 }
 
 fn takes_ownership(some_string: String) { // some_string 进入作用域
@@ -317,6 +332,14 @@ fn gives_ownership() -> String { // gives_ownership 将返回值移动给调用�
 
 fn takes_and_gives_back(a_string: String) -> String { // a_string 进入作用域
     a_string // a_string 被返回并移出函数
+}
+
+fn calculate_length(s : &String) -> usize{
+    s.len()
+}// 因为函数不拥有s的所有权，所以s离开作用域后不会被drop
+
+fn change(some_string: &mut String) { //这里传递的是可变引用
+    some_string.push_str(", world");
 }
 
 struct Struct {
