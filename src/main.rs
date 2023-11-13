@@ -268,11 +268,55 @@ fn main() {
         260 |     println!("s1 = {}, s2 = {}",s1,s2);
             |                                 ^^ value borrowed here after move
     */
+    let x : &str = "hello";
+    let y = x;
+    //这里x只存储了对hello的引用，赋值给y的过程并没有发生所有权转移，因为&str是一个指向字符串字面量的引用，它是一个固定大小的值，存储在栈上
+    println!("x = {}, y = {}",x,y);
 
+    //=====深拷贝=======
+    //Rust不会自动创建数据的深拷贝
+    let s1 = String::from("hello");
+    let s2 = s1.clone(); // 显式调用clone方法 完整拷贝s1在堆上的数据
+    println!("s1 = {}, s2 = {}",s1,s2);
+    //NOTICE clone会对所有数据进行深拷贝，这会消耗很多资源，所以在rust中，深拷贝是显式的，而不是隐式的
 
+    //=====浅拷贝=======
+    //浅拷贝只发生在栈上 可Copy的类型有：整数类型、浮点类型、布尔类型、字符类型、元组类型(其中的每个元素都是Copy类型)
 
+    //=====所有权和函数=======
+    //所有权也会发生在函数调用中 例如
+    let s = String::from("hello");
+    takes_ownership(s); //s的值被移动到函数里
+    //println!("{}",s); //这里会报错，因为s已经失效了
+    let x = 5;
+    makes_copy(x); //x的值被复制到函数里
+    println!("{}",x); //这里不会报错，因为x是Copy类型，所以x的值没有发生所有权转移，x仍然有效
 
+    //=====返回值和作用域=======
+    //返回值也会发生所有权转移
 
+    let s1 = gives_ownership(); // gives_ownership 将返回值移动给 s1
+    let s2 = String::from("hello"); // s2 进入作用域
+    let s3 = takes_and_gives_back(s2); // s2 被移动到 takes_and_gives_back 中,它也将返回值移动给 s3
+    println!("s1 = {}, s3 = {}",s1,s3); //这里如果尝试打印s2会报错，因为s2已经失效了
+
+}
+
+fn takes_ownership(some_string: String) { // some_string 进入作用域
+    println!("{}", some_string);
+}// some_string 离开作用域，drop函数被调用，some_string的内存被释放
+
+fn makes_copy(some_integer: i32) { // some_integer 进入作用域
+    println!("{}", some_integer);
+}// some_integer 离开作用域 不会有特殊操作
+
+fn gives_ownership() -> String { // gives_ownership 将返回值移动给调用它的函数
+    let some_string = String::from("hello"); // some_string 进入作用域
+    some_string // some_string 被返回并移出函数
+}
+
+fn takes_and_gives_back(a_string: String) -> String { // a_string 进入作用域
+    a_string // a_string 被返回并移出函数
 }
 
 struct Struct {
