@@ -1,3 +1,4 @@
+use std::ops::Index;
 use num::complex::Complex;
 
 fn main() {
@@ -208,29 +209,29 @@ fn main() {
     //如果表达式不返回任何值，会隐式返回一个单元类型的值()
     // if语句块也可以是一个表达式 可以用于赋值 类似三元表达式
     let a = 1;
-    let b = if a%2==1 { "odd" }else { "even" };
+    let b = if a % 2 == 1 { "odd" } else { "even" };
     println!("b = {}", b);
 
     //=======================函数=======================
     //函数的参数必须声明类型,函数名和参数名必须使用snake_case风格,
-    fn add_two(a:i32,b:i32)->i32{
-        a+b
+    fn add_two(a: i32, b: i32) -> i32 {
+        a + b
     }
-    println!("add_two(1,2) = {}",add_two(1,2));
+    println!("add_two(1,2) = {}", add_two(1, 2));
     //函数也是表达式,可以把函数的表达式直接赋值给变量
-    fn plus_five(a:i32)->i32{
-        a+5
+    fn plus_five(a: i32) -> i32 {
+        a + 5
     }
     let f = plus_five(1);
-    println!("f = {}",f);
+    println!("f = {}", f);
 
     //发散函数 diverging function 一般用于panic 用!作函数返回类型的时候，表示这个函数永远不会返回
-    fn _diverges()->!{
+    fn _diverges() -> ! {
         panic!("This function never returns!");
     }
     //还有另一种发散函数，就是 loop 循环，它永远不会结束
-    fn _diverges2()->!{
-        loop{}
+    fn _diverges2() -> ! {
+        loop {}
     }
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++所有权和借用+++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -239,7 +240,7 @@ fn main() {
     //变量作用域 Rust中每个值都被一个变量所拥有，当变量离开作用域，这个值就被丢弃了
     {
         let s = "hello"; //s进入作用域
-        println!("{}",s);
+        println!("{}", s);
     }//s离开作用域，被丢弃
 
     let _s = "hello"; //字符串字面量 不可变 保存在栈上
@@ -250,7 +251,7 @@ fn main() {
     //转移所有权
     let x = 5;
     let y = x; //x的值被复制到y，因为i32是基本类型，所以x和y都是5 这里没有发生所有权转移 因为i32是Copy类型(整数类型，固定大小的简单值 都被存在栈上)
-    println!("x = {}, y = {}",x,y);
+    println!("x = {}, y = {}", x, y);
 
     let s1 = String::from("hello");
     let _s2 = s1;
@@ -268,16 +269,16 @@ fn main() {
         260 |     println!("s1 = {}, s2 = {}",s1,s2);
             |                                 ^^ value borrowed here after move
     */
-    let x : &str = "hello";
+    let x: &str = "hello";
     let y = x;
     //这里x只存储了对hello的引用，赋值给y的过程并没有发生所有权转移，因为&str是一个指向字符串字面量的引用，它是一个固定大小的值，存储在栈上
-    println!("x = {}, y = {}",x,y);
+    println!("x = {}, y = {}", x, y);
 
     //=====深拷贝=======
     //Rust不会自动创建数据的深拷贝
     let s1 = String::from("hello");
     let s2 = s1.clone(); // 显式调用clone方法 完整拷贝s1在堆上的数据
-    println!("s1 = {}, s2 = {}",s1,s2);
+    println!("s1 = {}, s2 = {}", s1, s2);
     //NOTICE clone会对所有数据进行深拷贝，这会消耗很多资源，所以在rust中，深拷贝是显式的，而不是隐式的
 
     //=====浅拷贝=======
@@ -290,7 +291,7 @@ fn main() {
     //println!("{}",s); //这里会报错，因为s已经失效了
     let x = 5;
     makes_copy(x); //x的值被复制到函数里
-    println!("{}",x); //这里不会报错，因为x是Copy类型，所以x的值没有发生所有权转移，x仍然有效
+    println!("{}", x); //这里不会报错，因为x是Copy类型，所以x的值没有发生所有权转移，x仍然有效
 
     //=====返回值和作用域=======
     //返回值也会发生所有权转移
@@ -298,22 +299,148 @@ fn main() {
     let s1 = gives_ownership(); // gives_ownership 将返回值移动给 s1
     let s2 = String::from("hello"); // s2 进入作用域
     let s3 = takes_and_gives_back(s2); // s2 被移动到 takes_and_gives_back 中,它也将返回值移动给 s3
-    println!("s1 = {}, s3 = {}",s1,s3); //这里如果尝试打印s2会报错，因为s2已经失效了
+    println!("s1 = {}, s3 = {}", s1, s3); //这里如果尝试打印s2会报错，因为s2已经失效了
 
     //=====引用和借用=======
 
     // 引用和解引用
     let x = 5;
     let y = &x;
-    println!("x = {}, y = {}",x,*y); //解引用
+    println!("x = {}, y = {}", x, *y); //解引用
     //引用和解引用是一对互逆操作，引用是指向某个值的指针，解引用是获取指针指向的值
     //不可变引用
     let s1 = String::from("hello");
     let len = calculate_length(&s1); //传递s1的引用 但是calculate_length函数并不拥有s1的所有权
     println!("The length of '{}' is {}.", s1, len); //所以这里打印s1是没有问题的
     //可变引用 尝试修改引用变量
-    let mut s2 = String :: from("hello");
+    let mut s2 = String::from("hello");
     change(&mut s2); //传递s2的可变引用
+    println!("s2 = {}", s2);
+    //可变引用有一个很大的限制，就是在特定作用域中的特定数据只能有一个可变引用，这样做的目的是为了防止数据竞争
+    //数据竞争是指两个或更多指针同时访问同一块数据，至少有一个指针用于写入数据，且没有同步数据访问的机制
+    let mut s = String::from("hello");
+    let r1 = &mut s;
+    println!("r1 = {}", r1); //这里打印r1 下面的借用就不会触发borrow checker 即在第一次借用到最后一次使用之间，不能有任何修改借用变量的操作
+    let r2 = &mut s; // 如果上面的打印语句不执行，这里会报错，因为s已经被r1借用了，且r1没有完成最后一次使用,所以不能再被r2借用 在编译期就避免了数据竞争
+    //println!("r1 = {}, r2 = {}",r1,r2);
+    println!("r2 = {}", r2);
+    //println!("r1 = {}",r1);
+
+    //NOTICE {}占位符会自动解引用 可以帮我们解决一些编译错误
+    let mut s = String::from("hello");
+    {
+        let _r1 = &mut s;
+    } // r1 在这里离开了作用域 所以我们可以创建一个新的引用
+
+    let r2 = &mut s;
+    println!("r2 = {}", r2);
+
+    //可变引用和不可变引用不能同时存在
+    let mut _s = String::from("hello");
+    let r1 = &s; //不可变引用
+    let r2 = &s; //不可变引用
+    println!("r1 = {}, r2 = {}", r1, r2); //这里加一句 下面的可变引用就不会报错
+    //let r3 = &mut s; //可变引用
+    //println!("{}, {}, and {}", r1, r2, r3); //这里会报错，因为r1和r2是不可变引用，r3是可变引用，可变引用和不可变引用不能同时存在
+    assert_eq!(r1, r2); //这里可以使用断言，因为r1和r2是不可变引用，所以不会发生数据竞争
+
+    //NOTICE!!! 引用的作用域是从声明开始一直持续到最后一次使用为止 和变量有所不同 变量的作用域是从声明开始一直持续到当前作用域结束为止(即到达'}'为止)
+
+    //悬垂引用
+    //悬垂引用是指指向了已经被释放的内存的指针，rust编译器会阻止这种情况的发生 即在引用结束前不允许变量被释放
+    //let reference_to_nothing = dangle(); //这里会报错，因为dangle函数返回的是一个指向堆上数据的引用，但是dangle函数结束后，这个数据就被释放了，所以这里会报错
+
+    //==================================================================复合类型==================================================================
+    //=======================字符串与切片=======================
+    //字符串字面量
+    let s = "hello world";
+    //字符串对象
+    let _s1 = String::from("hello world");
+    //字符串切片
+    let hello = &s[0..5]; //btw 这种写法叫序列 详见 main.rs: 154
+    let world = &s[6..11];
+    println!("hello = {}, world = {}", hello, world);
+    //类似golang切片操作 从索引0开始截取和截取到最后一个元素的写法分别如下
+    let hello = &s[..5];
+    let world = &s[6..];
+    println!("hello = {}, world = {}", hello, world);
+    //NOTICE 对于字符串使用切片语法时 切片的索引必须是有效的字符索引 如果使用无效的字符索引会导致panic 比如汉字在UTF-8编码中占3个字节 截取&s[2..]会panic
+    let _s = "你好世界";
+    //let cut = &s[2..]; //这句报错：panicked at 'byte index 2 is not a char boundary; it is inside '你' (bytes 0..3) of `你好世界`'
+    //println!("cut = {}",cut);
+    let mut s = String::from("hello world");
+    let word = first_word(&s);
+    println!("word = {}", word); //这句打开 下面一句就不会报错 因为不可变借用已经使用过了
+    //s.clear(); //这句的参数是对自身的可变借用 然而word是对s的不可变借用 所以这里会报错 参见main.rs: 337
+
+    //=========其它切片========
+    let a = [1, 2, 3, 4, 5];
+    let slice = &a[1..3];
+    assert_eq!(slice, &[2,3]);
+
+    //=================字符串=================
+    //Rust中的字符是Unicode类型的 每个字符占据4个字节，但字符串是UTF-8编码，所以一个字符串中的每个字符所占的字节数是变化的（1-4）
+    //Rust语言级别的字符串类型就是字符串字面量，它是一个不可变的字符串切片，它的类型是&str 在标准库里还有一个String类型，它是一个可变的字符串对象
+    //str是硬编码进可执行文件的，无法被修改 String是一个可变且具有所有权的UTF-8编码字符串
+
+    //String和&str转换 TODO deref 隐式强制转换
+    let s = String::from("hello world");
+    let s = &s[..]; //转换为字符串切片
+    let s = s.to_string(); //转换为字符串对象
+    let s = s.as_str(); //转换为字符串切片
+    println!("s = {}", s);
+    //字符串索引
+    let s = String::from("hello");
+    //let h = s[0]; //这里会报错 `String` cannot be indexed by `{integer}`
+    /*
+        字符串源码：
+        pub struct String {
+            vec: Vec<u8>,
+        }
+        底层实际上是一个Vec<u8>，不同类型的文字在UTF-8下长度不同 所以通过索引取没有意义 且如果要保证索引读O(1)的时间复杂度
+        又不允许遍历到合法字符的结尾，所以干脆禁止这样做
+    */
+    let h = s.index(0..1);
+    println!("h = {}", h);
+
+    //字符串操作
+    let mut s = String::from("hello"); //可操作的字符串必须是可变的
+    //追加
+    s.push_str(" world"); //追加字符串
+    s.push('!');//追加字符
+    println!("s = {}", s);
+    //插入
+    s.insert_str(0, "hello Rust"); //在索引0处插入字符串
+    s.insert(10,'!'); //在索引10处插入字符
+    println!("s = {}", s);
+    //替换
+    let mut s1 = s.replace("rust","RUST");//适用于String和&str 返回的是一个新字符串 原字符串不必mut
+    let mut s2 = s1.replacen("RUST", "rust", 1); //适用于String和&str 返回的是一个新字符串 原字符串不必mut 只替换第一个目标值
+    s2.replace_range(0..5,"HELLO"); //适用于String 直接操作原字符串 必须mut
+    println!("s = {:?}", s2);
+    //删除
+    let p1 = s.pop();//删除最后一个字符并返回
+    println!("p1 = {:?}", p1);
+    let mut s = String::from("你好你好");
+    s.remove(0);//删除第一个字符 // remove的参数如果不是合法字符的边界会报错
+    println!("s = {}", s);
+    //s.remove(2); //panic 索引2是非法边界
+    s.truncate(3);//删除索引3之后的所有字符
+    println!("s = {}", s);
+    s.clear();//清空字符串
+    dbg!(s);
+    //连接
+    let s1 = String::from("hello ");
+    let s2 = String::from("world");
+    let s3 = s1 + &s2; //s2会自动解引用为&str类型 s1的所有权被转移 不能再打印s1 ‘+’是add() s1的所有权被转移到add()里了
+    let mut s3 = s3 +"!";
+    s3 +="!";
+    println!("s3 = {}", s3);
+    // !format方式
+    let s1 = String::from("hello ");
+    let s2 = String::from("world");
+    let s3 = format!("{}{}{}", s1, s2, "!"); //format!宏会返回一个String对象
+    println!("s3 = {}", s3);
 
 }
 
@@ -334,12 +461,22 @@ fn takes_and_gives_back(a_string: String) -> String { // a_string 进入作用�
     a_string // a_string 被返回并移出函数
 }
 
-fn calculate_length(s : &String) -> usize{
+fn calculate_length(s: &String) -> usize {
     s.len()
 }// 因为函数不拥有s的所有权，所以s离开作用域后不会被drop
 
 fn change(some_string: &mut String) { //这里传递的是可变引用
     some_string.push_str(", world");
+}
+
+
+// fn dangle() -> &String { // dangle 返回一个字符串的引用
+//    let s = String::from("hello"); // s 是一个新字符串
+//    &s // 返回字符串 s 的引用
+// } // 这里 s 离开作用域并被丢弃。其内存被释放。
+
+fn first_word(s: &String) -> &str {
+    &s[..1]
 }
 
 struct Struct {
