@@ -474,6 +474,50 @@ fn main() {
     let longer_delimiter = r###"A string with "# in it. And even "##!"###;
     println!("{}", longer_delimiter);
 
+    //=======================================元组=======================================
+    let tup : (i32,f64,u8) = (500,6.4,1);
+    //可以用模式匹配或者.索引的方式获取元组的值
+    let (x,y,z) = tup;
+    println!("x = {}, y = {}, z = {}",x,y,z);
+    println!("tup.0 = {}, tup.1 = {}, tup.2 = {}",tup.0,tup.1,tup.2);
+    //元组可以作为函数的参数和返回值
+    let s1 = String::from("hello");
+    let (s2,len) = calculate_length2(s1);
+    println!("s2 = {}, len = {}",s2,len);
+
+    //=======================================结构体=======================================
+    /*
+        1.结构体是一种自定义数据类型，它允许你命名和包装多个相关的值，从而形成一个更加有意义的组合
+        2.结构体的每个值都有自己的类型，这些类型被称为结构体的字段，并且可以独立命名和指定类型
+        3.初始化实例时，每个字段都必须有值，否则编译器会报错
+        4.顺序不必和定义时一致
+    */
+    let mut u1 = User {
+        username: String::from("张三"),
+        email: String::from("xxx@example.com"),
+        sign_in_count: 1,
+        active: true,
+    };
+    u1.username = String::from("李四"); // 需要将结构体实例定义为可变，才能修改结构体的字段 Rust不支持将结构体的某个字段设置为可变或不可变
+    println!("u1.username = {}",u1.username);
+    let u2 = build_user(String::from("aaa@example.com"),String::from("王五"));
+    println!("u2.username = {}",u2.username);
+}
+
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+
+fn build_user(email:String,username: String) -> User {
+    User {
+        email,
+        username,
+        active: true,
+        sign_in_count: 1,
+    }
 }
 
 fn takes_ownership(some_string: String) { // some_string 进入作用域
@@ -499,6 +543,11 @@ fn calculate_length(s: &String) -> usize {
 
 fn change(some_string: &mut String) { //这里传递的是可变引用
     some_string.push_str(", world");
+}
+
+fn calculate_length2(s: String) ->(String,usize) {
+    let len = s.len();
+    (s,len)
 }
 
 
