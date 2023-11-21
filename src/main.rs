@@ -502,6 +502,29 @@ fn main() {
     println!("u1.username = {}",u1.username);
     let u2 = build_user(String::from("aaa@example.com"),String::from("王五"));
     println!("u2.username = {}",u2.username);
+    // 利用已有的user1 创建user3
+    let u3 = User {
+        email: String::from("xxx@example.com"),
+        ..u1
+    }; // u3和u1只有email字段不同 所以可以用 ..u1 语法来创建u3 ..u1这种写法必须在结构体尾部使用
+    //username字段发生了所有权转移
+    println!("u3.username = {}",u3.username);
+
+    //元组结构体 结构体需要名称，但是结构体字段不一定需要
+    struct Color(i32,i32,i32);
+    struct Point(i32,i32,i32);
+    let black = Color(0,0,0);
+    let origin = Point(0,0,0);
+    println!("black = ({},{},{})",black.0,black.1,black.2);
+    println!("origin = ({},{},{})",origin.0,origin.1,origin.2);
+
+    //单元结构体
+    struct Unit;
+    let _unit = Unit;
+
+
+
+
 }
 
 struct User {
