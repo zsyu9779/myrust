@@ -376,7 +376,7 @@ fn main() {
     //=========其它切片========
     let a = [1, 2, 3, 4, 5];
     let slice = &a[1..3];
-    assert_eq!(slice, &[2,3]);
+    assert_eq!(slice, &[2, 3]);
 
     //=================字符串=================
     //Rust中的字符是Unicode类型的 每个字符占据4个字节，但字符串是UTF-8编码，所以一个字符串中的每个字符所占的字节数是变化的（1-4）
@@ -411,12 +411,12 @@ fn main() {
     println!("s = {}", s);
     //插入
     s.insert_str(0, "hello Rust"); //在索引0处插入字符串
-    s.insert(10,'!'); //在索引10处插入字符
+    s.insert(10, '!'); //在索引10处插入字符
     println!("s = {}", s);
     //替换
-    let mut s1 = s.replace("rust","RUST");//适用于String和&str 返回的是一个新字符串 原字符串不必mut
+    let mut s1 = s.replace("rust", "RUST");//适用于String和&str 返回的是一个新字符串 原字符串不必mut
     let mut s2 = s1.replacen("RUST", "rust", 1); //适用于String和&str 返回的是一个新字符串 原字符串不必mut 只替换第一个目标值
-    s2.replace_range(0..5,"HELLO"); //适用于String 直接操作原字符串 必须mut
+    s2.replace_range(0..5, "HELLO"); //适用于String 直接操作原字符串 必须mut
     println!("s = {:?}", s2);
     //删除
     let p1 = s.pop();//删除最后一个字符并返回
@@ -433,8 +433,8 @@ fn main() {
     let s1 = String::from("hello ");
     let s2 = String::from("world");
     let s3 = s1 + &s2; //s2会自动解引用为&str类型 s1的所有权被转移 不能再打印s1 ‘+’是add() s1的所有权被转移到add()里了
-    let mut s3 = s3 +"!";
-    s3 +="!";
+    let mut s3 = s3 + "!";
+    s3 += "!";
     println!("s3 = {}", s3);
     // !format方式
     let s1 = String::from("hello ");
@@ -475,15 +475,15 @@ fn main() {
     println!("{}", longer_delimiter);
 
     //=======================================元组=======================================
-    let tup : (i32,f64,u8) = (500,6.4,1);
+    let tup: (i32, f64, u8) = (500, 6.4, 1);
     //可以用模式匹配或者.索引的方式获取元组的值
-    let (x,y,z) = tup;
-    println!("x = {}, y = {}, z = {}",x,y,z);
-    println!("tup.0 = {}, tup.1 = {}, tup.2 = {}",tup.0,tup.1,tup.2);
+    let (x, y, z) = tup;
+    println!("x = {}, y = {}, z = {}", x, y, z);
+    println!("tup.0 = {}, tup.1 = {}, tup.2 = {}", tup.0, tup.1, tup.2);
     //元组可以作为函数的参数和返回值
     let s1 = String::from("hello");
-    let (s2,len) = calculate_length2(s1);
-    println!("s2 = {}, len = {}",s2,len);
+    let (s2, len) = calculate_length2(s1);
+    println!("s2 = {}, len = {}", s2, len);
 
     //=======================================结构体=======================================
     /*
@@ -499,32 +499,457 @@ fn main() {
         active: true,
     };
     u1.username = String::from("李四"); // 需要将结构体实例定义为可变，才能修改结构体的字段 Rust不支持将结构体的某个字段设置为可变或不可变
-    println!("u1.username = {}",u1.username);
-    let u2 = build_user(String::from("aaa@example.com"),String::from("王五"));
-    println!("u2.username = {}",u2.username);
+    println!("u1.username = {}", u1.username);
+    let u2 = build_user(String::from("aaa@example.com"), String::from("王五"));
+    println!("u2.username = {}", u2.username);
     // 利用已有的user1 创建user3
     let u3 = User {
         email: String::from("xxx@example.com"),
         ..u1
     }; // u3和u1只有email字段不同 所以可以用 ..u1 语法来创建u3 ..u1这种写法必须在结构体尾部使用
     //username字段发生了所有权转移
-    println!("u3.username = {}",u3.username);
+    println!("u3.username = {}", u3.username);
 
     //元组结构体 结构体需要名称，但是结构体字段不一定需要
-    struct Color(i32,i32,i32);
-    struct Point(i32,i32,i32);
-    let black = Color(0,0,0);
-    let origin = Point(0,0,0);
-    println!("black = ({},{},{})",black.0,black.1,black.2);
-    println!("origin = ({},{},{})",origin.0,origin.1,origin.2);
+    struct Color(i32, i32, i32);
+    struct Point(i32, i32, i32);
+    let black = Color(0, 0, 0);
+    let origin = Point(0, 0, 0);
+    println!("black = ({},{},{})", black.0, black.1, black.2);
+    println!("origin = ({},{},{})", origin.0, origin.1, origin.2);
 
     //单元结构体
     struct Unit;
     let _unit = Unit;
 
+    //=======================枚举=======================
+
+    //枚举类型是一个类型，它会包含所有可能的枚举成员, 而枚举值是该类型中的具体某个成员的实例
+    let four = IpAddrKind::V4;
+    let _six = IpAddrKind::V6;
+    print_IpAddrKind(&four);
+
+    let info = IpInfo {
+        kind: IpAddrKind::V4,
+        address: String::from("127.0.0.1"),
+    };
+    print_IpInfo(info);
+    // 枚举成员可以包含数据 见PokerCard
+    let clubs = PokerCard::Clubs(1);
+    let spades = PokerCard::Spades(2);
+    let diamonds = PokerCard::Diamonds(3);
+    let hearts = PokerCard::Hearts(4);
+    print_PokerCards(&[clubs, spades, diamonds, hearts]);
+
+    //任何类型的数据都可以作为枚举成员 例如字符串、数值甚至结构体
+    let m1 = Message::Quit;
+    let m2 = Message::Move { x: 1, y: 2 };
+    let m3 = Message::Write(String::from("hello"));
+    let m4 = Message::ChangeColor(1, 2, 3);
+    // 上述的四个枚举成员都有不同的类型 其实可以用struct来实现 用枚举的好处是可以将所有的类型都放在一个命名空间下
+    // 结合上述场景 如果一个函数的功能是接收并转发Message 但是它不关心消息类型 如果用结构体的话 这个函数无法接受4个类型的结构体参数
+    send_Msg(m1);
+    send_Msg(m2);
+    send_Msg(m3);
+    send_Msg(m4);
+    //Option枚举 用于处理空值
+    /*
+        enum Option<T> {
+            Some(T),
+            None,
+        }
+    */
+    //Option<T>是一个泛型枚举，它有两个成员，Some(T)和None，Some(T)表示一个包含了某个类型的值的Option枚举，
+    // None表示一个空值
+    let some_number = Some(5);
+    let some_string = Some("a string");
+    let absent_number: Option<i32> = None;
+    println!("some_number = {:?}, some_string = {:?}, absent_number = {:?}", some_number, some_string, absent_number);
+    // 使用Option<T>的好处是当我们想要使用T的时候 就必须处理None的情况 这样可以避免空指针异常 确保我们对有可能的空值进行处理
+    fn plus_one(x: Option<i32>) -> Option<i32> {
+        match x {
+            None => None,
+            Some(i) => Some(i + 1),
+        }
+    }
+    let five = Some(5);
+    let six = plus_one(five);
+    let none = plus_one(None);
+    println!("five = {:?}, six = {:?}, none = {:?}", five, six, none);
+
+    //切片 与数组不同，切片的长度在编译期是不确定的，所以切片是一个动态的类型
+    let a: [i32; 5] = [1, 2, 3, 4, 5];
+    let slice = &a[1..3];
+    println!("slice = {:?}", slice);
+    //创建切片的代价很小，它只是对原数组的引用，所以切片的复制代价也很小
+
+    //========================================流程控制========================================
+    //=======================if表达式=======================
+    let condition = true;
+    let number = if condition {
+        5
+    } else {
+        6
+    };
+    println!("number = {}", number); //每个分支里的返回值类型必须一致
+    //=======================循环=======================
+    for i in 1..=5 {
+        println!("i = {}", i);
+    }
+    //遍历集合类型的时候 往往要使用集合的引用形式 如果不使用引用形式 这个集合的所有权会被转移到for语句中 然后随着语句执行完成释放 后面没法再用这个集合了
+    let mut a = [1, 2, 3, 4, 5];
+    for i in &a {
+        println!("i = {}", i);
+    }
+    // 在for中修改元素
+    for j in &mut a {
+        *j += 1;
+    }
+    println!("a = {:?}", a);
+    // 在循环中获取索引
+    for (i, j) in a.iter().enumerate() {
+        println!("i = {}, j = {}", i, j);
+    }
+    //continue
+    for i in 1..5 {
+        if i == 2 {
+            continue;
+        } else if i == 4 { break; }
+        println!("i = {}", i);
+    }
+    //while循环
+    let mut i = 1;
+    while i <= 5 {
+        println!("i = {}", i);
+        i += 1;
+    }
+    //loop循环 配合if和break实现条件循环
+    let mut i = 1;
+    loop {
+        if i > 5 { break; }
+        println!("i = {}", i);
+        i += 1;
+    }
+    //NOTICE 使用迭代器遍历数组（切片）性能会更好 因为避免了每次的运行时索引边界检查
+
+    // break可以单独使用 也可以带一个返回值
+
+    //==============================模式匹配==============================
+    //match表达式 类似golang的switch
+    let number = 13;
+    match number {
+        1 => println!("one"),
+        2 => println!("two"),
+        3 => println!("three"),
+        13 => println!("thirteen"),
+        _ => println!("others"),
+    }
+    //match表达式的每个分支都是一个模式，模式可以是字面量、变量、通配符、占位符、枚举、结构体、元组、范围、引用、切片、迭代器、守卫
+    //模式匹配是穷尽的，如果没有匹配到任何分支，编译器会报错
+    //match本身是一个表达式，它的返回值是每个分支的返回值的公共类型
+    let ip = IpAddrKind::V4;
+    let ip_info = match ip {
+        IpAddrKind::V4 => IpInfo {
+            kind: IpAddrKind::V4,
+            address: String::from("localhost"),
+        },
+        IpAddrKind::V6 => IpInfo {
+            kind: IpAddrKind::V6,
+            address: String::from("::1"),
+        }
+    };
+    print_IpInfo(ip_info);
+
+    //match表达式的分支可以使用模式绑定
+    let actions = [
+        Action::Say(String::from("hello")),
+        Action::MoveTo(1, 2),
+        Action::ChangeColor(255, 255, 0),
+    ];
+    //这里的action是一个模式绑定，它会将actions数组中的每个元素绑定到action上，然后执行对应的分支
+    for action in &actions {
+        match action {
+            Action::Say(s) => {
+                println!("say {}", s);
+            }
+            Action::MoveTo(x, y) => {
+                println!("move to ({},{})", x, y);
+            }
+            Action::ChangeColor(r, g, b) => {
+                println!("change color to ({},{},{})", r, g, b);
+            }
+        }
+    }
+    //模式绑定的另一种写法 if let ；只要匹配一个条件 且忽略其他条件时用if let
+    if let Action::Say(s) = &actions[0] {
+        println!("if let say {}", s);
+    }
+
+    //matches!宏 可以用来简化match表达式
+    let v = vec![IpAddrKind::V4, IpAddrKind::V6];
+    v.iter().filter(|x| matches!(x,IpAddrKind::V4)).for_each(|x| print_IpAddrKind(x));
+
+    //变量遮蔽 无论是match还是if let 都会创建一个新的变量绑定，这个变量绑定会遮蔽外部的同名变量
+    let x = Some(5);
+    println!("before x = {:?}", x);//Some(5)
+    if let Some(x) = x {
+        println!("x被变量遮蔽 if let x = {:?}", x); //5
+    }
+    println!("after x = {:?}", x); //Some(5)
+
+    //Option详解
+    //使用Option<T> 是为了从Some中取出其内部的T值 以及处理没有值的情况
+    let five = Some(5);
+    let seven = plus_two(five);
+    let none = plus_two(None);
+    println!("five = {:?}, seven = {:?}, none = {:?}", five, seven, none);
+    // plus_two接收一个Option<i32类型的参数 返回一个Option<i32>类型的值
+    // 在该函数的内部处理中如果传入的是一个None 则返回一个None且不做任何处理 如果传入的是一个Some(i32) 则返回一个Some且对Some内部的值加2
+
+    //除了上述提到的if let模式匹配 也可以使用match模式匹配
+    let mut stack = Vec::new();
+    stack.push(1);
+    stack.push(2);
+    stack.push(3);
+    while let Some(top) = stack.pop() {
+        println!("top = {}", top);
+    }
+    //这里的while let循环会一直执行，直到stack.pop()返回None，即stack为空
+
+    //单分支多模式
+    let x = 1;
+    match x {
+        1 | 2 => {
+            println!("x = 1 or 2");
+        }
+        _ => {
+            println!("x = others");
+        }
+    }
+    //通过序列..=来匹配范围
+    let x = 5;
+    match x {
+        1..=5 => {
+            println!("x = 1..=5");
+        }
+        _ => {
+            println!("x = others");
+        }
+    }
+    //解构并分解值：可以使用模式来解构结构体、枚举、元组、引用、切片、迭代器
+    //解构结构体
+    let user = User {
+        username: String::from("张三"),
+        email: String::from("zhangsan@gmail.com"),
+        sign_in_count: 1,
+        active: true,
+    };
+    // let User { username:a, email:b, sign_in_count:c, active:d } = user;
+    // //将结构体的字段解构到变量中
+    // println!("a = {}, b = {}, c = {}, d = {}", a, b, c, d);
+    //简写
+    let User { username, email, sign_in_count, active } = user;
+    println!("username = {}, email = {}, sign_in_count = {}, active = {}", username, email, sign_in_count, active);
+
+    //匹配固定某个字段的方式
+    struct Point1 {
+        x: i32,
+        y: i32,
+    }
+    let p = Point1 { x: 0, y: 2,};
+    match p {
+        Point1 { x, y: 0 } => println!("x轴上,横坐标 = {}", x),
+        Point1 { x: 0, y } => println!("y轴上,纵坐标 = {}", y),
+        Point1 { x, y } => println!("x = {}, y = {}", x, y),
+    }
+
+    //==================================================================方法==================================================================
+
+    struct Circle {
+        x: f64,
+        y: f64,
+        radius: f64,
+    }
+    impl Circle {
+        //new是Circle的关联函数，因为它的第一个参数不是self，且new不是关键字 这种方法往往用于初始化当前结构体实例
+        fn new(x: f64, y: f64, radius: f64) -> Circle {
+            Circle { x, y, radius }
+        }
+        // Circle的方法 &self表示借用当前Circle结构体
+        fn area(&self) -> f64 {
+            std::f64::consts::PI * (self.radius * self.radius)
+        }
+    }
+
+    // self &self &mut self
+    // 在area方法中，我们使用了&self，其实是self：&Self的简写 ，这是因为我们不想获取Circle的所有权，只是想借用它，这样Circle就不会被销毁
+    // 而self表示获取Circle的所有权，这样Circle就会被销毁，这种情况很少见 &mut self表示获取Circle的可变借用
+    //关联函数和方法的区别 关联函数是属于结构体的，而方法是属于结构体实例的
+
+    struct Rectangle {
+        width: u32,
+        height: u32,
+    }
+
+    impl Rectangle {
+        fn area(&self) -> u32 {
+            self.width * self.height
+        }
+        fn can_hold(&self, other: &Rectangle) -> bool {
+            self.width > other.width && self.height > other.height
+        }
+        //rust中 允许方法名和结构体字段名相同
+        fn width(&self) -> u32 {
+            self.width
+        }
+        //关联函数
+        fn square(size: u32) -> Rectangle {
+            Rectangle { width: size, height: size }
+        }
+    }
+    let rect = Rectangle { width: 30, height: 50 };
+    // 字段
+    println!("rect.width = {}", rect.width);
+    // 方法
+    println!("rect.width() = {}", rect.width());
+
+    /*
+        NOTICE
+        在C/C++中有两个不同的运算符：.和->来调用方法，.直接在对象上调用方法 而->在对象的指针上调用方法 这是需要先解引用指针
+        e.g. object->method() 等价于 (*object).method()
+        而在Rust中，只有.运算符，它会自动解引用对象
+        所以上述代码中的rect.width()等价于(&rect).width()
+    */
+    // 关联函数 rust定义在impl中且没有self的函数被称为关联函数 约定俗成使用new来定义关联函数 所以rust特地没有提供new关键字 因为是函数所以不能用.来调用
+    let square = Rectangle::square(10);
+
+    // 可以定义多个impl
+    impl Rectangle {
+        fn print(&self) {
+            println!("width = {}, height = {}", self.width, self.height);
+        }
+    }
+
+    //为枚举实现方法
+    impl Message {
+        fn call(&self) {
+            println!("call");
+        }
+    }
+    let m = Message::Write(String::from("hello"));
+    m.call();
+    //=======================泛型=======================
+    //泛型是一种抽象，它通过在编译时不指定具体类型来实现代码复用
+    //使用特征trait来实现泛型 例如std::ops::Add<Output = T>
+    fn add <T: std::ops::Add<Output = T>>(a: T, b: T) -> T {
+        a + b
+    }
+    let a = 1;
+    let b = 2;
+    let c = add(a, b);
+    println!("c = {}", c);
+    //结构体中使用泛型
+    struct Point2<T> {
+        x: T,
+        y: T,
+    }
+    let p1 = Point2 { x: 1, y: 2 };
+    let p2 = Point2 { x: 1.0, y: 2.0 };
+    // 上述Point2结构体中的x和y必须是同一种类型，否则编译器会报错 error[E0308]: mismatched types
+    //let _p3 = Point2 { x: 1, y: 2.0 };
+    //如果想要x和y是不同的类型，可以使用多个泛型
+    struct Point3<T, U> {
+        x: T,
+        y: U,
+    }
+    let p3 = Point3 { x: 1, y: 2.1 };
+    println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
+    //枚举中使用泛型 详见Option<T> 和 Result<T, E>
+
+    //方法中使用泛型 使用泛型参数前 需要提前声明 impl<T>（方法泛型） 这样才能在Point2中用它
+    impl<T> Point2<T> {
+        fn x(&self) -> &T {
+            &self.x
+        }
+    }
+
+    let p4 = Point2 { x: 1, y: 2 };
+    println!("p4.x = {}", p4.x());
+
+    //为具体的泛型类型实现方法 即只当Point2的实例是某个具体类型（如f32）时才实现方法
+    impl Point2<f32> {
+        fn distance_from_origin(&self) -> f32 {
+            (self.x.powi(2) + self.y.powi(2)).sqrt()
+        }
+    }
+    let p5 = Point2 { x: 1.0, y: 2.0 };
+    println!("p5.distance_from_origin = {}", p5.distance_from_origin());
 
 
 
+
+
+
+}
+
+fn plus_two(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 2),
+    }
+}
+
+#[derive(Debug)]
+enum Action {
+    Say(String),
+    MoveTo(i32, i32),
+    ChangeColor(i32, i32, i32),
+}
+
+#[derive(Debug)]
+enum IpAddrKind {
+    V4,
+    V6,
+}
+
+#[derive(Debug)]
+enum PokerCard {
+    Clubs(u8),
+    Spades(u8),
+    Diamonds(u8),
+    Hearts(u8),
+}
+
+#[derive(Debug)]
+struct IpInfo {
+    kind: IpAddrKind,
+    address: String,
+}
+
+#[derive(Debug)]
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+
+fn print_IpAddrKind(ip_kind: &IpAddrKind) {
+    println!("ip_kind = {:?}", ip_kind);
+}
+
+fn print_IpInfo(ip_info: IpInfo) {
+    println!("ip_info = {:?}", ip_info);
+}
+
+fn print_PokerCards(poker_cards: &[PokerCard]) {
+    for card in poker_cards {
+        println!("poker_card = {:?}", card);
+    }
+}
+
+fn send_Msg(msg: Message) {
+    println!("msg = {:?}", msg);
 }
 
 struct User {
@@ -534,7 +959,7 @@ struct User {
     active: bool,
 }
 
-fn build_user(email:String,username: String) -> User {
+fn build_user(email: String, username: String) -> User {
     User {
         email,
         username,
@@ -568,9 +993,9 @@ fn change(some_string: &mut String) { //这里传递的是可变引用
     some_string.push_str(", world");
 }
 
-fn calculate_length2(s: String) ->(String,usize) {
+fn calculate_length2(s: String) -> (String, usize) {
     let len = s.len();
-    (s,len)
+    (s, len)
 }
 
 
