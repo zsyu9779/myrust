@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Display};
 use std::ops::Index;
 use num::complex::Complex;
 
@@ -756,7 +757,7 @@ fn main() {
         x: i32,
         y: i32,
     }
-    let p = Point1 { x: 0, y: 2,};
+    let p = Point1 { x: 0, y: 2, };
     match p {
         Point1 { x, y: 0 } => println!("x轴上,横坐标 = {}", x),
         Point1 { x: 0, y } => println!("y轴上,纵坐标 = {}", y),
@@ -841,7 +842,7 @@ fn main() {
     //=======================泛型=======================
     //泛型是一种抽象，它通过在编译时不指定具体类型来实现代码复用
     //使用特征trait来实现泛型 例如std::ops::Add<Output = T>
-    fn add <T: std::ops::Add<Output = T>>(a: T, b: T) -> T {
+    fn add<T: std::ops::Add<Output=T>>(a: T, b: T) -> T {
         a + b
     }
     let a = 1;
@@ -884,11 +885,112 @@ fn main() {
     }
     let p5 = Point2 { x: 1.0, y: 2.0 };
     println!("p5.distance_from_origin = {}", p5.distance_from_origin());
+    //const泛型 一个典型应用就是泛型定义数组长度
 
+    //定义函数参数为元素类型是T 长度是N（usize）的数组 可以传入任意长度的数组
+    fn display_array<T: std::fmt::Debug, const N: usize>(arr: [T; N]) {
+        println!("arr = {:?}", arr);
+    }
+    let arr1 = [1, 2, 3];
+    let arr2 = [1, 2, 3, 4, 5];
+    display_array(arr1);
+    display_array(arr2);
 
+    //=======================trait特征=======================
+    //类似于golang的interface 但需要显式继承
+    //trait是一种定义共享行为的方法，可以通过trait来定义共享的行为，然后在不同的类型上实现这些trait，从而实现共享行为
+    //定义
+    pub trait Summary {
+        fn summarize(&self) -> String;
+        fn summarizeDefalt(&self) -> String {
+            String::from("Read more...")
+        }
+    }
+    pub struct Post {
+        pub title: String,
+        pub author: String,
+        pub content: String,
+    }
+    impl Summary for Post {
+        fn summarize(&self) -> String {
+            format!("文章{},作者是{}", self.title, self.author)
+        }
+    }
+    pub struct Weibo {
+        pub username: String,
+        pub content: String
+    }
 
+    impl Summary for Weibo {
+        fn summarize(&self) -> String {
+            format!("{}发表了微博{}", self.username, self.content)
+        }
+        fn summarizeDefalt(&self) -> String {
+            String::from("微博内容太长了，不想看")
+        }
+    }
+    let post = Post { title: "RustDemo".to_string(), author: "zsyu9779".to_string(), content: "Rust great!".to_string() };
+    let weibo = Weibo { username: "zsyu9779".to_string(), content: "hello".to_string() };
+    println!("post.summarize = {}", post.summarize());
+    println!("weibo.summarize = {}", weibo.summarize());
+    //上面的Summary 被定义成了pub公开的 如果他人想要使用Summary特性 可以将其引入到作用域中进行实现
+    //关于特征实现与定义的位置 有一条非常重要的原则 如果想为类型A实现特征T 那么A或者T至少有一个是在当前作用域中定义的
+    //e.g. 如果要为上述的Post实现标准库中的Display特征 是OK的 因为Post定义在当前作用域 同样的为String实现上面的Summary特征也是OK的
+    // 但要为String实现Display特征是不行的 因为String是标准库中的类型 没有定义在当前定义域 该规则被称为孤儿规则（orphan rule）确保其他人编写的代码不会破坏你的代码
 
+    //默认实现 可以在trait中定义默认实现，这样其他类型无需再实现该方法，或者可以选择重载该方法 详见上面的summarizeDefalt方法
+    println!("post.summarizeDefalt = {}", post.summarizeDefalt());
+    println!("weibo.summarizeDefalt = {}", weibo.summarizeDefalt());//重载了
+    //默认实现允许调用相同trait中的其他方法
+    //...
 
+    //trait作为参数
+    // notify函数接收一个实现了Summary特征的参数 该参数可以是任意实现了Summary特征的类型(可以理解为interface参数，真正调用时实现多态)
+    pub fn notify(item: &impl Summary) {
+        println!("notify = {}", item.summarize());
+    }
+    notify(&post);
+    notify(&weibo);
+    //特征约束 trait bound
+    //虽然impl Trait这种语法易于理解 但实际上是一个语法糖 完整写法如下
+    //pub fn notify<T: Summary>(item: &T) {
+    //    println!("notify = {}", item.summarize());
+    //}
+    //这里的<T: Summary>被称为特征约束，它表示notify函数接收一个实现了Summary特征的泛型参数T
+    // 简单场景下impl Trait提供了简洁的语法 但是对于复杂的场景 特征约束可以让我们拥有更大的灵活性和语法表现能力：
+
+    // 1.可以在函数中使用多个泛型参数
+    pub fn notify1(item1: &impl Summary, item2: &impl Summary) {
+        println!("notify1 = {}", item1.summarize());
+        println!("notify1 = {}", item2.summarize());
+    }
+    //NOTICE 上述代码中的item1和item2可以是不同的类型，只要它们都实现了Summary特征 但如果我们需要限制item1和item2是同一种类型，那么就需要使用特征约束：
+    pub fn notify2<T:Summary>(item1:&T,item2:&T){
+        println!("notify2 = {}", item1.summarize());
+        println!("notify2 = {}", item2.summarize());
+    }
+    //Test
+    notify1(&post,&weibo);
+    //notify2(&post,&weibo); //error[E0308]: mismatched types
+
+    // 2.可以在函数中使用多个特征约束 例如约束参数必须同时满足Summary和Display特征
+    pub fn notify3<T:Summary+std::fmt::Display>(item:&T){
+        //参数实现了Display特征就可以直接打出这行
+        println!("notify3 = {}", item);
+    }
+    //Test
+    impl Display for Post{
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f,"title = {},author = {},content = {}",self.title,self.author,self.content)
+        }
+    }
+    notify3(&post);
+
+    // 3.可以在函数中使用where子句来简化特征约束
+    // 当特征约束很多的时候 函数的签名会变的很复杂
+    fn some_fn<T: Display + Clone, U: Clone + Debug>(t: &T, u: &U) -> i32 {
+        0
+    }
 
 }
 
