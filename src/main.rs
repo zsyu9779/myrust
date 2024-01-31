@@ -991,6 +991,29 @@ fn main() {
     fn some_fn<T: Display + Clone, U: Clone + Debug>(t: &T, u: &U) -> i32 {
         0
     }
+    //可以简化为
+    fn some_fn1<T, U>(t: &T, u: &U) -> i32
+        where T: Display + Clone,
+              U: Clone + Debug
+    {
+        0
+    }
+    //where子句可以将特征约束放在函数签名的最后，这样可以让函数签名更加清晰
+    //返回中的impl Trait
+    //可以在函数返回值中使用impl Trait，这样可以返回实现了某个特征的类型，这种写法被称为返回值多态（return type polymorphism）
+    //...
+
+    //通过derive派生特征
+    //形如 #[derive(Debug)]
+    //例如 Debug 特征，它有一套自动实现的默认代码，当你给一个结构体标记后，就可以使用 println!("{:?}", s) 的形式打印该结构体的对象。
+
+    //调用方法需要引入特征
+    let a:i32 = 10;
+    let b:u16 = 100;
+    let b_ = b.try_into().unwrap();
+    if a < b_ {
+        println!("a < b");
+    }
 
 }
 
