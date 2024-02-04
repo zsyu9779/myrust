@@ -1100,6 +1100,7 @@ fn main() {
             }
         }
     }
+    // 特征对象的动态
 }
 
 fn plus_two(x: Option<i32>) -> Option<i32> {
