@@ -757,7 +757,7 @@ fn main() {
         x: i32,
         y: i32,
     }
-    let p = Point1 { x: 0, y: 2, };
+    let p = Point1 { x: 0, y: 2 };
     match p {
         Point1 { x, y: 0 } => println!("x轴上,横坐标 = {}", x),
         Point1 { x: 0, y } => println!("y轴上,纵坐标 = {}", y),
@@ -918,7 +918,7 @@ fn main() {
     }
     pub struct Weibo {
         pub username: String,
-        pub content: String
+        pub content: String,
     }
 
     impl Summary for Weibo {
@@ -965,23 +965,23 @@ fn main() {
         println!("notify1 = {}", item2.summarize());
     }
     //NOTICE 上述代码中的item1和item2可以是不同的类型，只要它们都实现了Summary特征 但如果我们需要限制item1和item2是同一种类型，那么就需要使用特征约束：
-    pub fn notify2<T:Summary>(item1:&T,item2:&T){
+    pub fn notify2<T: Summary>(item1: &T, item2: &T) {
         println!("notify2 = {}", item1.summarize());
         println!("notify2 = {}", item2.summarize());
     }
     //Test
-    notify1(&post,&weibo);
+    notify1(&post, &weibo);
     //notify2(&post,&weibo); //error[E0308]: mismatched types
 
     // 2.可以在函数中使用多个特征约束 例如约束参数必须同时满足Summary和Display特征
-    pub fn notify3<T:Summary+std::fmt::Display>(item:&T){
+    pub fn notify3<T: Summary + std::fmt::Display>(item: &T) {
         //参数实现了Display特征就可以直接打出这行
         println!("notify3 = {}", item);
     }
     //Test
-    impl Display for Post{
+    impl Display for Post {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f,"title = {},author = {},content = {}",self.title,self.author,self.content)
+            write!(f, "title = {},author = {},content = {}", self.title, self.author, self.content)
         }
     }
     notify3(&post);
@@ -1008,13 +1008,98 @@ fn main() {
     //例如 Debug 特征，它有一套自动实现的默认代码，当你给一个结构体标记后，就可以使用 println!("{:?}", s) 的形式打印该结构体的对象。
 
     //调用方法需要引入特征
-    let a:i32 = 10;
-    let b:u16 = 100;
+    let a: i32 = 10;
+    let b: u16 = 100;
     let b_ = b.try_into().unwrap();
     if a < b_ {
         println!("a < b");
     }
+    //特征对象
+    //特征对象是一个存放了实现了某个特征的类型的对象，它可以用作参数或返回值，这样可以在运行时动态的选择实现了某个特征的类型
+    pub trait Draw {
+        fn draw(&self);
+    }
+    pub struct Button {
+        pub width: u32,
+        pub height: u32,
+        pub label: String,
+    }
+    impl Draw for Button {
+        fn draw(&self) {
+            println!("Button");
+        }
+    }
+    pub struct SelectBox {
+        pub width: u32,
+        pub height: u32,
+        pub options: Vec<String>,
+    }
+    impl Draw for SelectBox {
+        fn draw(&self) {
+            println!("SelectBox");
+        }
+    }
+    //特征对象的写法是&dyn Trait，它表示一个实现了Trait特征的引用
+    pub struct Screen {
+        //动态数组 元素是实现了Draw特征的类型
+        pub components: Vec<Box<dyn Draw>>,
+    }
+    //以下代码块解释Box<dyn Draw>的作用
+    {
+        impl Draw for u8 {
+            fn draw(&self) -> String {
+                format!("u8 : {}", *self)
+            }
+        }
+        impl Draw for f64 {
+            fn draw(&self) -> String {
+                format!("u8 : {}", *self)
+            }
+        }
 
+        //若T实现了Draw特征 则调用该函数时传入的Box<T>可以被隐式转换成函数签名中的Box<dyn Draw>
+        fn draw1(x: Box<dyn Draw>) {
+            // 由于实现了Dereference特征 Box智能指针会自动解引用为它所包裹的值 然后调用该值对应的类型上定义的draw方法
+            x.draw();
+        }
+
+        fn draw2(x: &dyn Draw) {
+            x.draw();
+        }
+
+        let x = 1.1f64;
+        let y = 8u8;
+
+        //x和y都实现了Draw特征 因为Box<T> 实现了Deref特征 所以Box<T>可以被隐式转换成Box<dyn Draw>
+        //基于x的值创建了一个Box<f64>，指针指向的数据被放置在堆上
+        draw1(Box::new(x));
+        draw1(Box::new(y));
+        draw2(&x);
+        draw2(&y);
+    }
+
+    //接下来完善Screen的run方法 用于将列表中的组件渲染在屏幕上
+    impl Screen {
+        pub fn run(&self) {
+            for component in self.components.iter() {
+                component.draw();
+            }
+        }
+    }
+
+    //通过泛型实现Screen如下
+    pub struct Screen1<T: Draw> {
+        pub components: Vec<T>,
+    }
+    impl <T> Screen1<T>
+        //where特征约束 所以这种写法有个弊端就是列表中的组件必须是同一种类型 即全部是SelectBox或全部是Button
+        where T: Draw {
+        pub fn run(&self) {
+            for component in self.components.iter() {
+                component.draw();
+            }
+        }
+    }
 }
 
 fn plus_two(x: Option<i32>) -> Option<i32> {
