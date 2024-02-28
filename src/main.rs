@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display};
 use std::ops::Index;
+use std::ops::Add;
 use num::complex::Complex;
 
 fn main() {
@@ -1029,6 +1030,8 @@ fn main() {
             println!("Button");
         }
     }
+
+
     pub struct SelectBox {
         pub width: u32,
         pub height: u32,
@@ -1046,24 +1049,27 @@ fn main() {
     }
     //以下代码块解释Box<dyn Draw>的作用
     {
-        impl Draw for u8 {
+        trait Draw1 {
+            fn draw(&self) -> String;
+        }
+        impl Draw1 for u8 {
             fn draw(&self) -> String {
                 format!("u8 : {}", *self)
             }
         }
-        impl Draw for f64 {
+        impl Draw1 for f64 {
             fn draw(&self) -> String {
                 format!("u8 : {}", *self)
             }
         }
 
         //若T实现了Draw特征 则调用该函数时传入的Box<T>可以被隐式转换成函数签名中的Box<dyn Draw>
-        fn draw1(x: Box<dyn Draw>) {
+        fn draw1(x: Box<dyn Draw1>) {
             // 由于实现了Dereference特征 Box智能指针会自动解引用为它所包裹的值 然后调用该值对应的类型上定义的draw方法
             x.draw();
         }
 
-        fn draw2(x: &dyn Draw) {
+        fn draw2(x: &dyn Draw1) {
             x.draw();
         }
 
@@ -1100,7 +1106,137 @@ fn main() {
             }
         }
     }
-    // 特征对象的动态
+    // 特征对象的动态分发
+    // 前面的泛型（Generics）是编译器在编译时根据类型进行代码生成，编译器会为每一个泛型参数对应的具体类型生成一份代码 这种方式就叫做静态分发
+    // 而特征对象（Trait Object）是在运行时根据类型进行代码生成，编译器无法知道具体特征对象的类型 直到运行时才能确定 这种方式就叫做动态分发 关键字dyn就是dynamic的缩写
+    // 由于动态分发的特征对象是在运行时才能确定的 所以它的性能会比静态分发的泛型差一些
+    // 特征对象大小不固定 在实践中几乎总是通过指针来使用特征对象 因为引用类型的大小是固定的 由两个指针组成：
+    // ptr指针指向了实现特征的具体类型的实例
+    // vptr指针指向了一个虚函数表（vtable），虚函数表中存放了实现特征的具体类型的方法的地址,例如上面的例子 Button和SelectBox的draw方法的地址
+    // e.g.由于Button实现了Draw特征 类型Button的实例对象btn可以被当做Draw的特征对象使用 btn中保存了数据成员和vptr指针 指向了Button的虚函数表
+    // NOTICE 此时btn是Draw的特征对象的实例 不是Button的实例 所以不能调用Button的其他方法
+
+    //Self和self 在rust中 有两个self 一个指代当前的实例对象 一个指代特征或者方法类型的别名
+    #[derive(Clone)]
+    pub struct InputBox {
+        pub width: u32,
+        pub height: u32,
+        pub label: String,
+    }
+    trait Draw2 {
+        fn draw(&self) -> Self;
+    }
+    impl Draw2 for InputBox {
+        //这里的Self指代的是InputBox类型 self指代的是InputBox的实例对象
+        fn draw(&self) -> Self{
+            return self.clone();
+        }
+    }
+    let input_box = InputBox { width: 100, height: 50, label: "input".to_string() };
+    let input_box1 = input_box.draw();
+
+    //特征对象的限制 不是所有特征都能拥有特征对象 只有对象安全的特征才行 当一个特征满足以下条件时，它就是对象安全的：
+    // 特征中的所有方法都有如下特征：
+    // 1.方法的接收者类型不能是Self
+    // 2.方法没有任何泛型参数
+
+    //关联类型 关联类型是在特征定义的语句块中 声明一个自定义类型 这样就可以在特征的方法中签名使用这个类型
+    pub trait Iterator {
+        type Item;
+        fn next(&mut self) -> Option<Self::Item>; // Self::Item代表当前调用者的关联类型Item
+    }
+    //以上是标准库中的Iterator特征的定义 它定义了一个关联类型Item，它表示迭代器的元素类型
+    //关联类型的使用
+    pub struct Counter {
+        count: u32,
+    }
+    impl Iterator for Counter {
+        type Item = u32;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.count < 5 {
+                self.count += 1;
+                Some(self.count)
+            } else {
+                None
+            }
+        }
+    }
+    let mut counter = Counter { count: 0 };
+    println!("counter.next = {:?}", counter.next());
+    //这里有个问题 Iterator特征其实可以被定义为 trait Iterator<T> { fn next(&mut self) -> Option<T>; } 这样就不需要关联类型了
+    //但是关联类型的优势在于它可以让实现特征的类型来决定特征的具体类型 这样就可以在实现特征的类型中使用这个类型
+    //另一方面 这样极大提升了代码的可读性 不需要在所有地方都写Iterator<T> 这样的泛型类型
+
+    //默认泛型类型参数 使用泛型类型参数的时候 可以为泛型参数指定一个默认类型 以下是标准库中std::ops::Add特征的定义
+    // pub trait Add<RHS=Self> {
+    //     type Output;
+    //     fn add(self, rhs: RHS) -> Self::Output;
+    // }
+    //这里的RHS=Self表示如果没有指定RHS的类型 默认为Self类型 意思是两个相加的类型相同
+    //举例 为Point实现Add特征
+    #[derive(Debug)]
+    struct Point_test {
+        x: i32,
+        y: i32,
+    }
+
+    impl Add for Point_test {
+        type Output = Point_test;
+        fn add(self, other: Point_test) -> Point_test {
+            Point_test { x: self.x + other.x, y: self.y + other.y }
+        }
+    }
+    let p1 = Point_test { x: 1, y: 2 };
+    let p2 = Point_test { x: 3, y: 4 };
+    println!("p1 + p2 = {:?}", p1 + p2);
+
+    //接下来是两个不同类型的相加
+    #[derive(Debug)]
+    struct Millimeters(u32);
+
+    struct Meters(u32);
+    impl Add<Meters> for Millimeters {
+        type Output = Millimeters;
+        fn add(self, other: Meters) -> Millimeters {
+            Millimeters(self.0 + (other.0 * 1000))
+        }
+    }
+    let mm = Millimeters(1000);
+    let m = Meters(1);
+    println!("mm + m = {:?}", mm + m);
+
+    trait Pilot {
+        fn fly(&self);
+    }
+    trait Wizard {
+        fn fly(&self);
+    }
+    struct Human;
+    impl Pilot for Human {
+        fn fly(&self) {
+            println!("This is your captain speaking.");
+        }
+    }
+    impl Wizard for Human {
+        fn fly(&self) {
+            println!("Up!");
+        }
+    }
+    impl Human {
+        fn fly(&self) {
+            println!("*waving arms furiously*");
+        }
+    }
+
+    //调用优先级
+    let person = Human;
+    person.fly(); //调用的是impl Human中的fly方法
+    //调用特征方法需要显式调用 因为fly函数的参数是self 当显式调用的时候编译器会根据调用者的类型来选择调用哪个方法
+    Pilot::fly(&person); //调用的是impl Pilot中的fly方法
+    Wizard::fly(&person); //调用的是impl Wizard中的fly方法
+
+
+
 }
 
 fn plus_two(x: Option<i32>) -> Option<i32> {
