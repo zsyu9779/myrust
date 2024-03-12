@@ -1235,6 +1235,43 @@ fn main() {
     Pilot::fly(&person); //调用的是impl Pilot中的fly方法
     Wizard::fly(&person); //调用的是impl Wizard中的fly方法
 
+    //============集合类型================
+
+    //Vec<T> 动态数组
+    //显式声明类型Vec<i32> 因为编译器无法推导v的具体类型
+    let v: Vec<i32> = Vec::new();
+    let mut v = Vec::new();
+    v.push(5); // 此时就无需手动声明类型
+    //如果有预先估计的vec的大小，可以使用Vec::with_capacity来创建 从而避免多次分配内存
+    //let mut v = Vec::with_capacity(10);
+    // 使用vec!宏来创建
+    let mut v = vec![1, 2, 3];
+    //访问元素 : 1.使用&v[index] 2.使用get方法
+    let third: &i32 = &v[2];
+    match v.get(2) {
+        Some(third) => println!("third = {}", third),
+        None => println!("None"),
+    } //get方法返回的是Option<&T>类型 所以需要match来匹配解构出具体的值
+    //显然 上述两种办法中 1更简洁 但有数组越界的风险 2更繁琐且有轻微的性能损耗 但是安全的
+    // 同时借用多个数组元素
+    let first = &v[0]; //不可变引用
+    //v.push(6); //error[E0502]: cannot borrow `v` as mutable because it is also borrowed as immutable
+    /*
+        上述代码中的first是一个不可变引用，而v.push(6)是一个可变引用，这两者是冲突的
+        因为Rust的借用规则是：在特定作用域中，对于特定数据，要么只能有一个可变引用，要么只能有多个不可变引用
+        但是不能同时存在一个可变引用和多个不可变引用
+    */
+    println!("first = {}", first);
+    //遍历
+    for i in &v {
+        println!("i = {}", i);
+    }
+    //修改
+    for i in &mut v {
+        *i += 50;
+    }
+
+
 
 
 }
