@@ -1,7 +1,9 @@
 use std::fmt::{Debug, Display};
+use std::iter::Iterator;
 use std::ops::Index;
 use std::ops::Add;
 use num::complex::Complex;
+use crate::IpAddrKind::V4;
 
 fn main() {
     //++++++++++++++++++++++++++++++++++++++++++++++++++++变量绑定与解构++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1244,7 +1246,7 @@ fn main() {
     v.push(5); // 此时就无需手动声明类型
     //如果有预先估计的vec的大小，可以使用Vec::with_capacity来创建 从而避免多次分配内存
     //let mut v = Vec::with_capacity(10);
-    // 使用vec!宏来创建
+    // 使用vec!宏来创建，能在创建的同时给予初始值
     let mut v = vec![1, 2, 3];
     //访问元素 : 1.使用&v[index] 2.使用get方法
     let third: &i32 = &v[2];
@@ -1253,6 +1255,7 @@ fn main() {
         None => println!("None"),
     } //get方法返回的是Option<&T>类型 所以需要match来匹配解构出具体的值
     //显然 上述两种办法中 1更简洁 但有数组越界的风险 2更繁琐且有轻微的性能损耗 但是安全的
+
     // 同时借用多个数组元素
     let first = &v[0]; //不可变引用
     //v.push(6); //error[E0502]: cannot borrow `v` as mutable because it is also borrowed as immutable
@@ -1270,10 +1273,82 @@ fn main() {
     for i in &mut v {
         *i += 50;
     }
+    //存储不同类型的元素
+    //通常情况下 数组中必须存储相同类型的元素 但是可以通过使用枚举和特征对象来实现不同类型元素的存储
+    let v = vec![
+        IpAddr::V4("127.0.0.1".to_string()),
+        IpAddr::V6("::1".to_string()),
+    ];
+    for ip in v {
+        // 数组中是不同的IPAddr枚举类型
+        show_ip(ip)
+    }
+    trait IpAddrT {
+        fn display(&self);
+    }
+    struct V4(String);
+    impl IpAddrT for V4 {
+        fn display(&self) {
+            println!("ipv4 :{:?}",self.0)
+        }
+    }
+    struct V6(String);
+    impl IpAddrT for V6 {
+        fn display(&self) {
+            println!("ipv6:{:?}",self.0)
+        }
+    }
+    let v : Vec<Box<dyn IpAddrT>> = vec![
+        Box::new(V4("127.0.0.1".to_string())),
+        Box::new(V6("::1".to_string())),
+    ];
+    for ip in v {
+        ip.display();
+    }
+    //Vector的常用方法
+    let v = vec![0;3]; // 长度为3 初始值为0的vec
+    let v_from = Vec::from([0,0,0]);
+    //动态数组意味着容量不足时会导致扩容，目前策略是申请一块两倍大的空间 并将所有元素拷贝到新的位置
+    //可以考虑在初始化时就指定一个实际的预估容量，从而尽可能减少内存拷贝
+    let mut v = Vec::with_capacity(10);
+    v.extend([1,2,3]);
+    println!("Vector 长度是: {}, 容量是: {}", v.len(), v.capacity());
 
+    v.reserve(100);        // 调整 v 的容量，至少要有 100 的容量
+    println!("Vector（reserve） 长度是: {}, 容量是: {}", v.len(), v.capacity());
 
+    v.shrink_to_fit();     // 释放剩余的容量，一般情况下，不会主动去释放容量
+    println!("Vector（shrink_to_fit） 长度是: {}, 容量是: {}", v.len(), v.capacity());
+    //其他常见方法
+    assert!(!v.is_empty());//判断v是否为空
 
+    v.insert(2,3);//在指定索引位置插入数据
+    v.remove(1);//移除指定位置的元素并返回
+    v.pop(); //删除并返回v的尾部元素
+    //pop的返回值是Option枚举值 所以有可能返回None
+    v.clear();
 
+    let mut v1 = [11,22].to_vec();
+    v.append(&mut v1); // 将v1中的所有元素附加到v中 v1清空
+    v.truncate(1); // 阶段到指定长度，多余的元素被删除
+    v.retain(|x| *x > 10); //保留满足条件的元素，删除不满足的元素
+    let mut v = [11,22,33,44,55].to_vec();
+    // 删除指定范围的元素，同时获取被删除元素的迭代器
+    let mut m: Vec<_> = v.drain(1..=3).collect();
+    println!("m = {:?}", m);
+    let v2 = m.split_off(1);//从指定位置分割vec，返回分割后的vec
+    println!("v2 = {:?}", v2);
+    //vector的排序
+    let mut v = vec![1, 5, 10, 2, 15];
+    v.sort(); // 默认升序排序
+    println!("v = {:?}", v);
+    //非稳定排序
+    let mut v = vec![1, 5, 10, 2, 15];
+    v.sort_unstable(); // 非稳定排序
+    //浮点数排序
+    //由于浮点数中存在NaN和-0.0等特殊值，所以浮点数的排序需要使用partial_cmp方法
+    let mut v = vec![1.0, 5.0, 10.0, 2.0, 15.0];
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 }
 
 fn plus_two(x: Option<i32>) -> Option<i32> {
@@ -1289,6 +1364,18 @@ enum Action {
     MoveTo(i32, i32),
     ChangeColor(i32, i32, i32),
 }
+
+#[derive(Debug)]
+enum IpAddr {
+    V4(String),
+    V6(String),
+}
+
+fn show_ip(ip: IpAddr){
+    println!("ip address is {:?}",ip)
+}
+
+
 
 #[derive(Debug)]
 enum IpAddrKind {
@@ -1395,3 +1482,4 @@ fn first_word(s: &String) -> &str {
 struct Struct {
     e: i32,
 }
+
